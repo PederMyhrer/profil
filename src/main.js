@@ -10,8 +10,17 @@ const HINT_OUT = hint.textContent, HINT_IN = "Klikk på tingene i rommet. Døra 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const stats = document.getElementById("stats");
 
-let world;
-try { world = createWorld(canvas); } catch (e) { console.error(e); sceneEl.classList.add("nogl"); }
+/* device routing: no WebGL2, very low memory or data saver gets the still image and the text */
+function weakDevice() {
+  try { const c = document.createElement("canvas"); if (!c.getContext("webgl2")) return "webgl"; } catch (_) { return "webgl"; }
+  if (navigator.deviceMemory && navigator.deviceMemory <= 2) return "memory";
+  if (navigator.connection && navigator.connection.saveData) return "savedata";
+  if (new URLSearchParams(location.search).has("static")) return "static";
+  return null;
+}
+let world; const weak = weakDevice();
+if (weak) { sceneEl.classList.add("nogl"); document.getElementById("staticNote").hidden = false; hint.textContent = "Alt står i hytteboka under."; }
+else { try { world = createWorld(canvas); } catch (e) { console.error(e); sceneEl.classList.add("nogl"); document.getElementById("staticNote").hidden = false; } }
 if (world) boot();
 
 function boot() {
@@ -73,7 +82,7 @@ function boot() {
   function loop(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     frame(dt); updateLabel();
-    fpsAcc += dt; fpsN++; if (fpsAcc > 0.5) { stats.textContent = Math.round(fpsN / fpsAcc) + " fps"; fpsAcc = 0; fpsN = 0; }
+    fpsAcc += dt; fpsN++; if (fpsAcc > 0.5) { stats.textContent = Math.round(fpsN / fpsAcc) + " fps · " + world.info.render.calls + " kall · " + Math.round(world.info.render.triangles / 1000) + "k tri"; fpsAcc = 0; fpsN = 0; }
     if (running) requestAnimationFrame(loop);
   }
   const capture = new URLSearchParams(location.search).has("capture");
@@ -103,8 +112,8 @@ function boot() {
     view.hidden = false; const snap = world.snapshot(); vc.width = snap.width; vc.height = snap.height; const x = vc.getContext("2d"); x.drawImage(snap, 0, 0);
     setStatus("Viltkameraet på treet tok et bilde av scenen. Laster modellen (10 MB) og ser på det.");
     try {
-      const boxes = await detect(snap, 0.3); x.drawImage(snap, 0, 0); drawBoxes(x, boxes);
-      setStatus(boxes.length ? "Modellen fant " + boxes.length + " ting i bildet fra viltkameraet." : "Modellen fant ingenting den kjenner igjen i dette bildet ennå. I grå boks er det ventet, formene mangler detaljer.");
+      const boxes = await detect(snap, 0.4); x.drawImage(snap, 0, 0); drawBoxes(x, boxes);
+      setStatus(boxes.length ? "Modellen fant " + boxes.length + " ting i bildet fra viltkameraet." : "Modellen fant ingenting den kjenner igjen i dette bildet. Den kan 80 vanlige ting fra COCO-settet, og scenen er tegnet, ikke fotografert.");
     } catch (e) { setStatus("Kunne ikke kjøre modellen i denne nettleseren."); console.error(e); }
   }
   document.getElementById("camBtn").addEventListener("click", () => setCam(!camOn));

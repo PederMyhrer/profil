@@ -13,6 +13,7 @@
 <meta property="og:image" content="https://pedermyhrer.github.io/profil/assets/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0b1424">
+<link rel="preload" as="image" href="assets/still.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -35,7 +36,7 @@ img{max-width:100%}
 a{color:var(--amber);text-underline-offset:3px}
 a:hover{color:#ffd28f}
 :focus-visible{outline:2px solid var(--amber);outline-offset:3px}
-.scene{position:relative;height:clamp(520px,88vh,900px);overflow:hidden;background:#6b7078;isolation:isolate}
+.scene{position:relative;height:clamp(520px,88vh,900px);overflow:hidden;background:#0b1424 url(assets/still.jpg) center/cover no-repeat;isolation:isolate}
 @media (max-width:640px){.scene{height:max(560px,82svh)}}
 .scene canvas#world{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .8s}
 .scene.ready canvas#world{opacity:1}
@@ -128,7 +129,7 @@ dialog#panel[open]{animation:slidein .25s ease-out}
   <div class="controls">
     <button class="pill" id="exitBtn" type="button" hidden>Ut igjen</button>
     <button class="pill cam" id="camBtn" type="button" aria-pressed="false" hidden>Viltkamera</button>
-    <span class="stage">Steg 1: grå boks</span>
+    <span class="stage" id="staticNote" hidden>Statisk versjon. Enheten din ble vurdert som for svak for 3D-scenen.</span>
     <span id="stats"></span>
     <span class="grow"></span>
     <a class="pill" href="#hytteboka">Hytteboka &darr;</a>

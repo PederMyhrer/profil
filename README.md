@@ -2,20 +2,20 @@
 
 Personlig side for Peder Myhrer Leinhardt. En malt hytte ved elva som er CV-en. Ingen byggesteg, ingen server, hostes gratis på GitHub Pages.
 
-## Status: steg 1, grå boks
+## Status: steg 1 til 4 levert
 
-Siden er en sanntids 3D-scene i Three.js. Akkurat nå er alt grå klosser med riktige mål, lys, kameratur og klikkpunkter. Utseende (toon-shading, palett, tåke, bloom, vann) kommer i steg 2, detaljer i steg 3, ytelse og reserve i steg 4.
+Siden er en sanntids 3D-scene i Three.js. Utseendet kommer fra toon-shading med tre trinn, palett fra stilrammen, blå-time-himmel, tåke, bloom på de varme lysene og lett filmkorn. Ingen bilder brukes som scene. Det eneste bildet i repoet er `assets/still.jpg` og `assets/og.jpg`, og de er rendret fra scenen selv.
 
 ## Mål brukt i scenen
 
-Hentet fra en typisk liten tømmerhytte: grunnflate 6,0 x 4,5 m, vegghøyde 2,2 m, takvinkel 30 grader, stokker Ø 0,20 m, dør 0,9 x 2,0 m, vinduer 0,9 x 1,1 m med brystning 0,9 m, gulv 0,45 m over bakken på steinmur, veranda 1,5 m dyp, trinn 0,18 m. Alt står øverst i `src/world.js` og kan endres ett sted.
+Hentet fra en typisk liten tømmerhytte: grunnflate 6,0 x 4,5 m, vegghøyde 2,2 m, takvinkel 30 grader, stokker Ø 0,20 m, dør 0,9 x 2,0 m, vinduer 0,9 x 1,1 m med brystning 0,9 m, gulv 0,45 m over bakken på steinmur, veranda 1,5 m dyp, trinn 0,18 m. Alt står øverst i `src/world.js`.
 
 ## Slik henger det sammen
 
 | Fil | Hva |
 |-----|-----|
 | `index.html` | Siden. All tekst står i `<main id="hytteboka">`. Hver `section` har en `data-id` som kobler den til en gjenstand i scenen. |
-| `src/world.js` | Scenen: terreng, elv, hytte med laftede vegger, veranda, interiør, trær, båt, bål, lys, kamerarigg, plukking, viltkameraet (et ekte kamera i scenen som rendrer til en tekstur). |
+| `src/world.js` | Scenen: himmel, terreng, elv (egen shader), hytte med laftede stokker og torvtak, veranda, interiør med bokhylle, bord, laptop, lampe, ovn, kart, hyttebok, håv, lenestol, skog (instansert), bjørker, gress, ildfluer, røyk, glør, støv, lys, etterbehandling, kamerarigg, plukking og viltkameraet (et kamera på veggen inne som rendrer til en tekstur). |
 | `src/main.js` | Kobler scenen til siden: peker, svevende etikett, panel, inn og ut, fps-måler, viltkamera-demoen. |
 | `src/detect.js` | YOLO11n i nettleseren via ONNX Runtime Web. Lastes først ved behov. |
 | `assets/vendor/three/` | Three.js 0.170 (minifisert) pluss OrbitControls og etterbehandlingspassene vi skal bruke. |
@@ -23,6 +23,19 @@ Hentet fra en typisk liten tømmerhytte: grunnflate 6,0 x 4,5 m, vegghøyde 2,2 
 | `assets/ort/` | Modellen (10,7 MB) og kjøretiden. |
 
 Alt er lokalt. Ingen CDN.
+
+## Ytelse og reserve
+
+- Før første interaksjon lastes omtrent 0,9 MB: Three.js 0,69 MB, GSAP 0,07 MB, kode 0,05 MB, stillbilde 0,09 MB, pluss fonter.
+- Modellen (22 MB) lastes bare når noen slår på viltkameraet.
+- Skogen og gresset er instansert (ett tegnekall hver). Pikselforhold er begrenset til 1,5 på mobil og 2 på desktop.
+- Enheter uten WebGL2, med 2 GB minne eller mindre, eller med datasparing, får stillbildet og teksten. `?static` tvinger det fram.
+- Uten JavaScript: stillbildet og teksten. Redusert bevegelse: ingen partikler, ingen kameratur, bare klipp.
+- Fps, tegnekall og trekanter vises nederst i scenen.
+
+## Målt der dette ble bygget
+
+Ren programvare-rendering uten skjermkort: 25 til 50 fps. Det sier lite om en ekte maskin. Mål selv: tallet står nederst til venstre i scenen. Kravet er over 50 på laptop og over 30 på en nyere iPhone.
 
 ## Kjøre lokalt
 
@@ -72,8 +85,9 @@ Se `KILDER.md`.
 
 ## Videre
 
-- Ekte dybdekart med Depth Anything (kjør lokalt, legg inn med samme filnavn).
-- Overmaling av scenene der det trengs, for eksempel laptopskjermen med et ekte deteksjonsbilde og kartet med dine egne nåler.
+- Lyd fra ekte opptak: legg en fil i `assets/audio/elv.mp3`, så kan knappen spille den (ikke koblet ennå, det finnes ikke et ekte opptak i repoet).
+- Et ekte deteksjonsbilde fra skadedeteksjonsprosjektet på laptopskjermen (nå er det en tegnet skisse).
+- Kartet med dine egne steder.
 - Engelsk versjon.
 - Lenke til GitHub når prosjektene er publisert.
 
