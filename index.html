@@ -5,38 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Peder Myhrer Leinhardt</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Peder Myhrer Leinhardt. Data, maskinlæring og KI, på vei mot computer vision og sensorteknologi. En hytte ved elva med CV-en min inni.">
+<meta name="description" content="Peder Myhrer Leinhardt. Data, maskinlæring og KI, på vei mot computer vision og sensorteknologi. En hytte ved elva med CV-en inni.">
 <meta property="og:title" content="Peder Myhrer Leinhardt">
 <meta property="og:description" content="Data, maskinlæring og KI, på vei mot computer vision og sensorteknologi.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://leinhardt.no/">
+<meta property="og:url" content="https://pedermyhrer.github.io/profil/">
 <meta property="og:image" content="https://pedermyhrer.github.io/profil/assets/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0b1424">
-<link rel="preload" as="image" href="assets/ext.webp" media="(min-width: 701px)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Person","name":"Peder Myhrer Leinhardt","alternateName":"Peder Myhrer","url":"https://leinhardt.no/","jobTitle":"Rådgiver","worksFor":{"@type":"Organization","name":"Forsvarsbygg"},"alumniOf":{"@type":"CollegeOrUniversity","name":"Handelshøyskolen BI"},"knowsAbout":["Maskinlæring","Computer vision","Python","Dataanalyse","Kunstig intelligens"],"sameAs":["https://www.linkedin.com/in/pedermyhrer"]}
 </script>
+<script type="importmap">{"imports":{"three":"./assets/vendor/three/three.module.min.js","three/addons/":"./assets/vendor/three/"}}</script>
 <style>
-/* Layout: the painted scene fills the first screen (WebGL cover-fit), hotspots sit on top of it.
-   Below: "Hytteboka", the same content as calm readable text. Single dark theme, chosen on purpose: the page is a night scene. */
+/* Layout: a real-time 3D scene fills the first screen. Below it, Hytteboka: the same content as calm text. Single dark theme on purpose, it is a night scene. */
 :root{
-  --night:#0b1424;
-  --ground:#101c2a;
-  --panel:#15243a;
-  --line:#2a3c55;
-  --ink:#efe6d2;
-  --dim:#a7b3c2;
-  --amber:#f0a94a;
-  --window:#ffd98a;
-  --moss:#7fa35a;
-  --scan:#8cff9a;
-  --display:'Fraunces',Georgia,'Times New Roman',serif;
-  --body:'Source Sans 3',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  --night:#0b1424;--ground:#101c2a;--panel:#15243a;--line:#2a3c55;--ink:#efe6d2;--dim:#a7b3c2;--amber:#f0a94a;--window:#ffd98a;--moss:#7fa35a;--scan:#8cff9a;
+  --display:'Fraunces',Georgia,'Times New Roman',serif;--body:'Source Sans 3',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -47,48 +35,34 @@ img{max-width:100%}
 a{color:var(--amber);text-underline-offset:3px}
 a:hover{color:#ffd28f}
 :focus-visible{outline:2px solid var(--amber);outline-offset:3px}
-
-/* ---------- Scene ---------- */
-.scene{position:relative;height:clamp(520px,88vh,900px);overflow:hidden;background:#0b1424 url(assets/ext-m.webp) center/cover no-repeat;isolation:isolate}
+.scene{position:relative;height:clamp(520px,88vh,900px);overflow:hidden;background:#6b7078;isolation:isolate}
 @media (max-width:640px){.scene{height:max(560px,82svh)}}
-.scene canvas{position:absolute;inset:0;display:block}
-#world{opacity:0;transition:opacity .9s ease}
-.scene.ready #world{opacity:1}
-.scene.nogl #world,.scene.nogl #fx{display:none}
-#fx{pointer-events:none}
-.scene::after{content:"";position:absolute;inset:auto 0 0;height:26%;background:linear-gradient(#0b142400,#0b1424);z-index:1;pointer-events:none}
-.scene::before{content:"";position:absolute;inset:0 0 auto;height:30%;background:linear-gradient(#060b14b3,#060b1400);z-index:1;pointer-events:none}
-
-.plaque{position:absolute;z-index:3;top:calc(env(safe-area-inset-top,0px) + clamp(18px,4vw,44px));left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));max-width:34rem;padding-left:clamp(0px,2vw,28px);transition:opacity .4s,transform .4s}
+.scene canvas#world{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .8s}
+.scene.ready canvas#world{opacity:1}
+.scene.nogl canvas#world{display:none}
+.scene::after{content:"";position:absolute;inset:auto 0 0;height:22%;background:linear-gradient(#0b142400,#0b1424);z-index:1;pointer-events:none}
+.plaque{position:absolute;z-index:3;top:calc(env(safe-area-inset-top,0px) + clamp(18px,4vw,44px));left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));max-width:34rem;padding-left:clamp(0px,2vw,28px);transition:opacity .4s,transform .4s;pointer-events:none}
 .plaque.away{opacity:0;transform:translateY(-10px)}
 .plaque.inside h1{font-size:1.35rem;margin-bottom:.2rem}
 .plaque.inside p:not(.hint){display:none}
-.plaque.inside .hint{margin-top:.2rem}
 .plaque h1{font-family:var(--display);font-weight:600;font-size:clamp(2rem,1.3rem+3vw,3.6rem);line-height:1.02;margin:0 0 .6rem;letter-spacing:-.01em;text-wrap:balance;text-shadow:0 2px 18px #000c,0 1px 2px #000}
 .plaque p{margin:0;font-size:clamp(1.02rem,.95rem+.35vw,1.2rem);max-width:30rem;text-wrap:pretty;text-shadow:0 1px 10px #000d,0 1px 2px #000}
-.plaque .hint{margin-top:.8rem;font-family:var(--mono);font-size:.76rem;color:#d7dde6;letter-spacing:.02em}
-
-.hotspots{position:absolute;inset:0;z-index:2}
-.spot{position:absolute;background:transparent;border:0;padding:0;cursor:pointer;border-radius:8px}
-.spot:focus-visible{outline:2px dashed var(--amber);outline-offset:2px}
-.spot .dot{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff3cc;box-shadow:0 0 0 3px #f0a94a66,0 0 18px 6px #f0a94a88;opacity:.75;transition:opacity .2s,transform .2s}
-.scene.busy .spot .dot{opacity:0}
-.spot:hover .dot,.spot:focus-visible .dot{opacity:1;transform:scale(1.25)}
-.spot.pulse .dot{animation:pulse 1.2s ease-out 1}
-@keyframes pulse{0%{transform:scale(1);box-shadow:0 0 0 3px #f0a94a66,0 0 18px 6px #f0a94a88}50%{transform:scale(1.8);box-shadow:0 0 0 6px #f0a94a33,0 0 30px 12px #f0a94a66}100%{transform:scale(1)}}
-.spot .tag{position:absolute;left:50%;bottom:calc(50% + 16px);transform:translate(-50%,4px);white-space:nowrap;font-family:var(--display);font-size:1rem;color:#1b130a;background:var(--window);padding:.2rem .65rem .25rem;border-radius:3px;box-shadow:0 4px 14px #0008;opacity:0;transition:opacity .15s,transform .15s;pointer-events:none}
-.spot .tag small{font-family:var(--mono);font-size:.68rem;opacity:.7;margin-left:.4rem}
-.spot:hover .tag,.spot:focus-visible .tag{opacity:1;transform:translate(-50%,0)}
-
+.plaque .hint{margin-top:.8rem;font-family:var(--mono);font-size:.76rem;color:#e6ebf2;letter-spacing:.02em}
+#label{position:absolute;z-index:3;transform:translate(-50%,calc(-100% - 14px));white-space:nowrap;font-family:var(--display);font-size:1rem;color:#1b130a;background:var(--window);padding:.2rem .65rem .25rem;border-radius:3px;box-shadow:0 4px 14px #0008;pointer-events:none}
+#label small{font-family:var(--mono);font-size:.68rem;opacity:.7;margin-left:.4rem}
 .controls{position:absolute;z-index:3;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
 .controls .grow{flex:1}
 .pill{font-family:var(--mono);font-size:.82rem;color:var(--ink);background:#0b1424c9;border:1px solid #ffffff2a;padding:.42rem .8rem;border-radius:999px;cursor:pointer;text-decoration:none;line-height:1.2;backdrop-filter:blur(6px)}
 .pill:hover{border-color:var(--amber);color:#fff}
 .pill[aria-pressed="true"]{background:var(--amber);color:#1b130a;border-color:var(--amber)}
 .pill.cam[aria-pressed="true"]{background:var(--scan);border-color:var(--scan)}
-.nojs{position:absolute;z-index:4;left:16px;right:16px;bottom:20px;color:#d7dde6;font-family:var(--mono);font-size:.82rem;text-shadow:0 1px 6px #000}
-
-/* ---------- Hytteboka ---------- */
+#stats{font-family:var(--mono);font-size:.72rem;color:#e6ebf2;opacity:.8;text-shadow:0 1px 4px #000}
+.stage{font-family:var(--mono);font-size:.72rem;color:#e6ebf2;opacity:.8;text-shadow:0 1px 4px #000;border:1px dashed #ffffff55;padding:.2rem .5rem;border-radius:3px}
+#camView{position:absolute;z-index:4;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 16px);width:min(360px,46vw);background:#07200c;border:2px solid var(--scan);border-radius:4px;box-shadow:0 10px 40px #000a}
+#camView canvas{display:block;width:100%;height:auto}
+#camView .bar{display:flex;justify-content:space-between;align-items:center;padding:.3rem .5rem;font-family:var(--mono);font-size:.7rem;color:var(--scan)}
+#camView button{font:inherit;background:transparent;border:1px solid var(--scan);color:var(--scan);border-radius:3px;padding:.1rem .4rem;cursor:pointer}
+.nojs{position:absolute;z-index:4;left:16px;right:16px;bottom:20px;color:#e6ebf2;font-family:var(--mono);font-size:.82rem;text-shadow:0 1px 6px #000}
 .book{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:3rem 4rem}
 .book-inner{max-width:62rem;margin:0 auto}
 .book-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem 1.2rem;margin-bottom:1rem}
@@ -122,47 +96,40 @@ a:hover{color:#ffd28f}
 .btn{font-family:var(--body);font-weight:600;font-size:1rem;background:var(--amber);color:#1b130a;border:0;padding:.45rem .9rem;border-radius:4px;cursor:pointer}
 .btn:hover{background:#ffc166}
 .btn.cam{background:var(--scan)}
-.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .note{font-size:.9rem;color:var(--dim)}
 .demoOut{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:4px;margin-top:.6rem}
 input[type=file]{font-size:.9rem;color:var(--dim)}
 footer{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:1.5rem calc(2rem + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);color:var(--dim);font-family:var(--mono);font-size:.74rem}
 footer div{max-width:62rem;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem}
-
-/* ---------- Panel ---------- */
 dialog#panel{padding:0;border:0;background:var(--ground);color:var(--ink);border-left:1px solid var(--line);margin:0 0 0 auto;height:100%;max-height:none;width:min(30rem,100%);box-shadow:-20px 0 60px #0008}
 dialog#panel::backdrop{background:#04081033}
 dialog#panel[open]{animation:slidein .25s ease-out}
 @keyframes slidein{from{transform:translateX(40px);opacity:0}}
-@media (max-width:640px){
-  dialog#panel{margin:auto 0 0 0;width:100%;max-width:100%;height:auto;max-height:82svh;border-left:0;border-top:1px solid var(--line);border-radius:12px 12px 0 0}
-  @keyframes slidein{from{transform:translateY(40px);opacity:0}}
-}
+@media (max-width:640px){dialog#panel{margin:auto 0 0 0;width:100%;max-width:100%;height:auto;max-height:82svh;border-left:0;border-top:1px solid var(--line);border-radius:12px 12px 0 0}@keyframes slidein{from{transform:translateY(40px);opacity:0}}}
 .panel-inner{padding:1.3rem max(1.4rem,env(safe-area-inset-right,0px)) calc(2rem + env(safe-area-inset-bottom,0px)) 1.4rem;overflow:auto;max-height:100%}
 .panel-top{display:flex;justify-content:flex-end;margin-bottom:.4rem}
 #panelBody .entry{display:block;border:0;padding:0}
 #panelBody .entry h3{margin-bottom:1rem}
 #panelBody .cards{grid-template-columns:minmax(0,1fr)}
-@media (prefers-reduced-motion:reduce){dialog#panel[open]{animation:none}#world{transition:none}.spot.pulse .dot{animation:none}}
+@media (prefers-reduced-motion:reduce){dialog#panel[open]{animation:none}.scene canvas#world{transition:none}}
 </style>
 </head>
 <body>
 
 <div class="scene" id="scene">
-  <canvas id="world" aria-hidden="true"></canvas>
-  <canvas id="fx" aria-hidden="true"></canvas>
-  <div class="hotspots" id="hotspots" role="group" aria-label="Ting rundt hytta"></div>
-
+  <canvas id="world" aria-label="Hytta ved elva, en 3D-scene. Klikk på døra for å gå inn."></canvas>
+  <div id="label" hidden></div>
   <header class="plaque">
     <h1>Peder Myhrer Leinhardt</h1>
     <p>Data, maskinlæring og KI. Rådgiver i Forsvarsbygg, på vei mot computer vision og sensorteknologi.</p>
-    <p class="hint">Gå inn døra. Alt står også i hytteboka under.</p>
+    <p class="hint">Dra for å se deg rundt. Klikk på døra for å gå inn.</p>
   </header>
-
+  <div id="camView" hidden><div class="bar"><span>VILTKAMERA 01 &middot; REC</span><button type="button" id="camClose">Lukk</button></div><canvas id="camCanvas" width="640" height="480"></canvas></div>
   <div class="controls">
     <button class="pill" id="exitBtn" type="button" hidden>Ut igjen</button>
     <button class="pill cam" id="camBtn" type="button" aria-pressed="false" hidden>Viltkamera</button>
-    <button class="pill" id="soundBtn" type="button" aria-pressed="false">Elvesus</button>
+    <span class="stage">Steg 1: grå boks</span>
+    <span id="stats"></span>
     <span class="grow"></span>
     <a class="pill" href="#hytteboka">Hytteboka &darr;</a>
   </div>
@@ -277,7 +244,7 @@ dialog#panel[open]{animation:slidein .25s ease-out}
  </div>
 </main>
 
-<footer><div><span>Ås, 2026</span><span>Malt scene, levende i WebGL. Hostes på GitHub Pages.</span></div></footer>
+<footer><div><span>Ås, 2026</span><span>Sanntids 3D i Three.js. Hostes på GitHub Pages.</span></div></footer>
 
 <dialog id="panel" aria-labelledby="panelTitle">
   <div class="panel-inner">
@@ -287,6 +254,6 @@ dialog#panel[open]{animation:slidein .25s ease-out}
 </dialog>
 
 <script src="assets/vendor/gsap.min.js"></script>
-<script src="src/app.js"></script>
+<script type="module" src="src/main.js"></script>
 </body>
 </html>

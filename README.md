@@ -2,22 +2,33 @@
 
 Personlig side for Peder Myhrer Leinhardt. En malt hytte ved elva som er CV-en. Ingen byggesteg, ingen server, hostes gratis på GitHub Pages.
 
+## Status: steg 1, grå boks
+
+Siden er en sanntids 3D-scene i Three.js. Akkurat nå er alt grå klosser med riktige mål, lys, kameratur og klikkpunkter. Utseende (toon-shading, palett, tåke, bloom, vann) kommer i steg 2, detaljer i steg 3, ytelse og reserve i steg 4.
+
+## Mål brukt i scenen
+
+Hentet fra en typisk liten tømmerhytte: grunnflate 6,0 x 4,5 m, vegghøyde 2,2 m, takvinkel 30 grader, stokker Ø 0,20 m, dør 0,9 x 2,0 m, vinduer 0,9 x 1,1 m med brystning 0,9 m, gulv 0,45 m over bakken på steinmur, veranda 1,5 m dyp, trinn 0,18 m. Alt står øverst i `src/world.js` og kan endres ett sted.
+
 ## Slik henger det sammen
 
 | Fil | Hva |
 |-----|-----|
-| `index.html` | Siden. All tekst står i `<main id="hytteboka">`. Hver `section` har en `data-id` som kobler den til en ting i scenen. |
-| `hotspots.json` | Hvor tingene er i bildene (normaliserte koordinater), hvor bålet og pipa er, hvor ildfluene flyr. Flytt et punkt her, aldri i koden. |
-| `src/app.js` | Én WebGL-pass som gjør bildet levende: parallakse fra dybdekart, vann, blafrende lys, varm overgang gjennom døra. Partikler (røyk, ildfluer, glør, støv) på et 2D-lerret oppå. Viltkamera-demoen. |
-| `assets/ext.webp`, `door.webp`, `int.webp` | De tre scenene, 1680 px. `-m.webp` er mobilversjoner. |
-| `assets/*-depth.png` | Dybdekart (mørkt er langt unna). Laget for hånd fra scenens geometri, fordi Depth Anything ikke kunne lastes ned der siden ble bygget. Byttes ut med et ekte dybdekart når du har kjørt modellen lokalt: samme filnavn, 420 px bredt, gråtoner. |
-| `assets/*-light.png` | Masker over de varme lyskildene. Det er disse som blafrer. |
-| `assets/ext-water.png` | Maske over elva. |
-| `assets/ort/` | YOLO11n som ONNX (10,7 MB) og ONNX Runtime Web. Lastes først når noen slår på viltkameraet. |
-| `assets/vendor/gsap.min.js` | GSAP 3.12.5 for dør-overgangen. Ligger lokalt så siden ikke er avhengig av et CDN. |
-| `assets/og.jpg` | Bildet som vises når lenken deles. |
+| `index.html` | Siden. All tekst står i `<main id="hytteboka">`. Hver `section` har en `data-id` som kobler den til en gjenstand i scenen. |
+| `src/world.js` | Scenen: terreng, elv, hytte med laftede vegger, veranda, interiør, trær, båt, bål, lys, kamerarigg, plukking, viltkameraet (et ekte kamera i scenen som rendrer til en tekstur). |
+| `src/main.js` | Kobler scenen til siden: peker, svevende etikett, panel, inn og ut, fps-måler, viltkamera-demoen. |
+| `src/detect.js` | YOLO11n i nettleseren via ONNX Runtime Web. Lastes først ved behov. |
+| `assets/vendor/three/` | Three.js 0.170 (minifisert) pluss OrbitControls og etterbehandlingspassene vi skal bruke. |
+| `assets/vendor/gsap.min.js` | GSAP 3.12.5 for kameraturen. |
+| `assets/ort/` | Modellen (10,7 MB) og kjøretiden. |
 
-Valg underveis: PixiJS var planen, men én håndskrevet shader gjør alt scenen trenger (parallakse, vann, lys, overgang) uten 400 kB bibliotek. Lettere, raskere og enklere å endre.
+Alt er lokalt. Ingen CDN.
+
+## Kjøre lokalt
+
+`python3 -m http.server 8000` i mappa, åpne `http://localhost:8000/`. Siden må serveres over http fordi den bruker ES-moduler.
+
+`?capture` i adressen gir en fast klokke, brukt til å ta opp video av kameraturen bilde for bilde.
 
 ## Publisere
 
