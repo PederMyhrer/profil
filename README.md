@@ -28,7 +28,8 @@ Alt er lokalt. Ingen CDN.
 
 - Før første interaksjon lastes omtrent 0,9 MB: Three.js 0,69 MB, GSAP 0,07 MB, kode 0,05 MB, stillbilde 0,09 MB, pluss fonter.
 - Modellen (22 MB) lastes bare når noen slår på viltkameraet.
-- Skogen og gresset er instansert (ett tegnekall hver). Pikselforhold er begrenset til 1,5 på mobil og 2 på desktop.
+- Tre kvalitetsnivåer (lav, middels, høy) som styrer pikselforhold, skyggeoppløsning, myke skygger, skygger fra punktlys og bloom-oppløsning. Siden starter på middels, måler fps i tre sekunder og går ned under 40 eller opp over 58. Knappen «Kvalitet» i scenen låser nivået, og valget huskes i nettleseren.
+- Skogen, gresset, bøkene og gresset på taket er instansert. Alt som står stille er slått sammen per materiale: 253 tegnekall ute og 149 inne, mot 800 og 588 før.
 - Enheter uten WebGL2, med 2 GB minne eller mindre, eller med datasparing, får stillbildet og teksten. `?static` tvinger det fram.
 - Uten JavaScript: stillbildet og teksten. Redusert bevegelse: ingen partikler, ingen kameratur, bare klipp.
 - Fps, tegnekall og trekanter vises nederst i scenen.

@@ -11,6 +11,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const C = {
   L: 6.0, D: 4.5, H: 2.2, LOG: 0.2, PITCH: Math.PI / 6, OVER: 0.5,
@@ -31,9 +32,12 @@ const P = {
 export function createWorld(canvas) {
   const lite = new URLSearchParams(location.search).has("capture");
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(matchMedia("(max-width: 700px)").matches ? 1.5 : 2, devicePixelRatio));
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = lite ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+  const TIERS = { low: { pr: 1, shadow: 512, soft: false, pointShadows: false, bloom: 0.5 }, medium: { pr: 1.5, shadow: 1024, soft: false, pointShadows: false, bloom: 0.75 }, high: { pr: 2, shadow: 2048, soft: true, pointShadows: true, bloom: 1 } };
+  let tier = "medium"; try { const saved = localStorage.getItem("kvalitet"); if (TIERS[saved]) tier = saved; } catch (_) { }
+  if (lite) tier = "low";
+  renderer.setPixelRatio(Math.min(TIERS[tier].pr, devicePixelRatio)); renderer.shadowMap.type = TIERS[tier].soft ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+  renderer.shadowMap.enabled = true;
+  renderer.info.autoReset = false; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(P.skyMid);
   scene.fog = new THREE.FogExp2(P.fog, 0.022);
@@ -71,7 +75,7 @@ export function createWorld(canvas) {
         c += vec3(0.9, 0.95, 1.0) * star * 0.9;
         gl_FragColor = vec4(c, 1.0); }`
   })); scene.add(sky);
-  const moonMesh = new THREE.Mesh(new THREE.SphereGeometry(2.2, 16, 12), new THREE.MeshBasicMaterial({ color: 0xf2f0e4, fog: false })); moonMesh.position.set(-60, 48, -70); scene.add(moonMesh);
+  const moonMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2, 1), new THREE.MeshBasicMaterial({ color: 0xf2f0e4, fog: false })); moonMesh.position.set(-60, 48, -70); scene.add(moonMesh);
 
   /* ---------- terrain ---------- */
   const groundG = new THREE.PlaneGeometry(120, 120, 90, 90);
@@ -148,7 +152,9 @@ export function createWorld(canvas) {
     const g = new THREE.Group(); g.position.set(0, F + C.H + Math.tan(C.PITCH) * (halfD + C.OVER) / 2 + 0.05, s * (halfD + C.OVER) / 2); g.rotation.x = s * C.PITCH; cabin.add(g);
     box(C.L + 0.9, 0.08, slope, M.wood, 0, 0, 0, g); const turf = box(C.L + 0.9, 0.2, slope, M.roof, 0, 0.14, 0, g); turf.name = "turf";
     cyl(0.09, C.L + 0.9, M.timber, 0, 0.22, s * slope / 2, "x", g);
-    for (let k = 0; k < 90; k++) { const t = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.16 + rnd() * 0.12, 4), toon(rnd() < 0.5 ? 0x6a9a3c : 0x7fb04a)); t.position.set(-halfL - 0.4 + rnd() * (C.L + 0.8), 0.3, (rnd() - 0.5) * slope * 0.95); g.add(t); if (rnd() < 0.12) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.03, 5, 4), new THREE.MeshBasicMaterial({ color: [0xf2d36a, 0xe9e4d8, 0xd36bd0][k % 3] })); f.position.copy(t.position); f.position.y += 0.12; g.add(f); } }
+    { const n = 90; const tufts = new THREE.InstancedMesh(new THREE.ConeGeometry(0.04, 0.2, 4), new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap: ramp }), n); const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pos = new THREE.Vector3(), cc = new THREE.Color();
+      for (let k = 0; k < n; k++) { pos.set(-halfL - 0.4 + rnd() * (C.L + 0.8), 0.3, (rnd() - 0.5) * slope * 0.95); sc.set(1, 0.8 + rnd() * 0.7, 1); m.compose(pos, q, sc); tufts.setMatrixAt(k, m); cc.set(rnd() < 0.5 ? 0x6a9a3c : 0x7fb04a); tufts.setColorAt(k, cc); } tufts.instanceMatrix.needsUpdate = true; tufts.instanceColor.needsUpdate = true; g.add(tufts);
+      const fl = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.03, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }), 12); for (let k = 0; k < 12; k++) { pos.set(-halfL - 0.4 + rnd() * (C.L + 0.8), 0.42, (rnd() - 0.5) * slope * 0.9); sc.set(1, 1, 1); m.compose(pos, q, sc); fl.setMatrixAt(k, m); cc.set([0xf2d36a, 0xe9e4d8, 0xd36bd0][k % 3]); fl.setColorAt(k, cc); } fl.instanceMatrix.needsUpdate = true; fl.instanceColor.needsUpdate = true; g.add(fl); }
   }
   box(0.5, 1.3, 0.5, M.stone, 1.8, F + C.RIDGE - 0.25, -0.6, cabin);
   const chimneyTop = new THREE.Vector3(1.8, F + C.RIDGE + 0.45, -0.6);
@@ -188,8 +194,10 @@ export function createWorld(canvas) {
   const rugT = new THREE.CanvasTexture(rugC); rugT.colorSpace = THREE.SRGBColorSpace; const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.3), new THREE.MeshToonMaterial({ map: rugT, gradientMap: ramp })); rug.rotation.x = -Math.PI / 2; rug.position.set(-0.2, inner.y + 0.012, 0.3); rug.receiveShadow = true; cabin.add(rug);
   // bookshelf with books and binders
   const shelf = new THREE.Group(); shelf.position.set(inner.x0 + 0.18, inner.y, -0.6); cabin.add(shelf);
-  const shelfBody = box(0.36, 2.0, 1.6, M.wood, 0, 1.0, 0, shelf); hot(shelfBody, "utdanning", "Bokhylla", "Utdanning");
-  for (let i = 0; i < 5; i++) { box(0.34, 0.03, 1.52, M.woodLight, 0.01, 0.1 + i * 0.45, 0, shelf); if (i < 4) { let z = -0.72; while (z < 0.72) { const w = 0.03 + rnd() * 0.05, h = 0.22 + rnd() * 0.16; const b = box(0.26, h, w, toon([0x8e2f2a, 0x2f4e7a, 0xd9c7a0, 0x3f6a3a, 0x6a3a7a, 0xb8894a][Math.floor(rnd() * 6)]), 0.03, 0.115 + i * 0.45 + h / 2, z + w / 2, shelf); z += w + 0.006; if (rnd() < 0.08) z += 0.1; } } }
+  const shelfBody = box(0.04, 2.0, 1.6, M.wood, -0.16, 1.0, 0, shelf); hot(shelfBody, "utdanning", "Bokhylla", "Utdanning"); box(0.36, 2.0, 0.04, M.wood, 0, 1.0, -0.78, shelf); box(0.36, 2.0, 0.04, M.wood, 0, 1.0, 0.78, shelf); box(0.36, 0.04, 1.6, M.wood, 0, 2.0, 0, shelf);
+  { const items = []; for (let i = 0; i < 5; i++) { box(0.34, 0.03, 1.52, M.woodLight, 0.01, 0.1 + i * 0.45, 0, shelf); if (i < 4) { let z = -0.72; while (z < 0.72) { const w = 0.03 + rnd() * 0.05, h = 0.22 + rnd() * 0.16; items.push([0.03, 0.115 + i * 0.45 + h / 2, z + w / 2, h, w, [0x8e2f2a, 0x2f4e7a, 0xd9c7a0, 0x3f6a3a, 0x6a3a7a, 0xb8894a][Math.floor(rnd() * 6)]]); z += w + 0.006; if (rnd() < 0.08) z += 0.1; } } }
+    const books = new THREE.InstancedMesh(new THREE.BoxGeometry(0.26, 1, 1), new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap: ramp }), items.length); const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pos = new THREE.Vector3(), cc = new THREE.Color();
+    items.forEach(([x, y, z, h, w, col], k) => { pos.set(x, y, z); sc.set(1, h, w); m.compose(pos, q, sc); books.setMatrixAt(k, m); cc.set(col); books.setColorAt(k, cc); }); books.instanceMatrix.needsUpdate = true; books.instanceColor.needsUpdate = true; books.castShadow = true; shelf.add(books); }
   for (const dz of [0.5, 0.95]) { box(0.02, 0.32, 0.26, toon(0x3a2a1c), inner.x0 + 0.015, inner.y + 1.65, dz, cabin); box(0.01, 0.26, 0.2, M.paper, inner.x0 + 0.03, inner.y + 1.65, dz, cabin); }
   // desk under the back window, laptop, lamp, sketches
   const deskX = C.BWIN_X, deskZ = inner.z0 + 0.45;
@@ -215,7 +223,7 @@ export function createWorld(canvas) {
   for (const [dx, dz] of [[-0.2, -0.2], [0.2, -0.2], [-0.2, 0.2], [0.2, 0.2]]) box(0.05, 0.15, 0.05, M.iron, inner.x1 - 0.5 + dx, inner.y + 0.08, inner.z0 + 0.5 + dz, cabin);
   const stoveGlass = box(0.22, 0.16, 0.02, M.ember, inner.x1 - 0.5, inner.y + 0.5, inner.z0 + 0.76, cabin); stoveGlass.castShadow = false;
   cyl(0.06, 1.5, M.iron, inner.x1 - 0.5, inner.y + 1.7, inner.z0 + 0.5, "y", cabin);
-  const kettle = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), toon(0x7a5a3a)); kettle.position.set(inner.x1 - 0.5, inner.y + 1.05, inner.z0 + 0.5); kettle.scale.y = 0.8; kettle.castShadow = true; cabin.add(kettle);
+  const kettle = new THREE.Mesh(new THREE.IcosahedronGeometry(0.12, 1), toon(0x7a5a3a)); kettle.position.set(inner.x1 - 0.5, inner.y + 1.05, inner.z0 + 0.5); kettle.scale.y = 0.8; kettle.castShadow = true; cabin.add(kettle);
   box(0.5, 0.05, 0.5, M.stone, inner.x1 - 0.5, inner.y + 0.0, inner.z0 + 0.5, cabin);
   // map on the right wall, with pins and a compass below
   const mapC = document.createElement("canvas"); mapC.width = 256; mapC.height = 200; { const x = mapC.getContext("2d"); x.fillStyle = "#e6dcc2"; x.fillRect(0, 0, 256, 200); x.strokeStyle = "#8a7a52"; x.lineWidth = 1.2; for (let i = 0; i < 9; i++) { x.beginPath(); for (let a = 0; a <= 6.3; a += 0.2) { const r = 20 + i * 11 + Math.sin(a * 3 + i) * 7; x.lineTo(120 + Math.cos(a) * r * 1.1, 100 + Math.sin(a) * r * 0.75); } x.closePath(); x.stroke(); } x.strokeStyle = "#3a6aa8"; x.lineWidth = 3; x.beginPath(); x.moveTo(0, 150); x.quadraticCurveTo(80, 130, 256, 170); x.stroke(); for (const [px, py] of [[70, 80], [150, 60], [200, 120], [40, 150]]) { x.fillStyle = "#d8402e"; x.beginPath(); x.arc(px, py, 5, 0, 7); x.fill(); } }
@@ -271,7 +279,7 @@ export function createWorld(canvas) {
   const barkC = document.createElement("canvas"); barkC.width = 64; barkC.height = 256; { const x = barkC.getContext("2d"); x.fillStyle = "#e8e4da"; x.fillRect(0, 0, 64, 256); x.fillStyle = "#2a2622"; for (let i = 0; i < 26; i++) x.fillRect(rnd() * 50, rnd() * 250, 8 + rnd() * 20, 2 + rnd() * 3); }
   const barkT = new THREE.CanvasTexture(barkC); barkT.colorSpace = THREE.SRGBColorSpace; barkT.wrapS = barkT.wrapT = THREE.RepeatWrapping; barkT.repeat.set(2, 3);
   const barkM = new THREE.MeshToonMaterial({ map: barkT, gradientMap: ramp });
-  for (const [x, z, h] of [[5.4, -3.6, 10], [7.2, -1.0, 11], [6.6, 1.9, 9], [-6.2, -6.5, 10], [4.2, -8, 12]]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, h, 8), barkM); t.position.set(x, h / 2, z); t.castShadow = true; scene.add(t); for (let k = 0; k < 4; k++) { const c = new THREE.Mesh(new THREE.SphereGeometry(1.0 + rnd() * 0.7, 8, 6), M.birchLeaf); c.position.set(x + (rnd() - 0.5) * 2, h * 0.75 + rnd() * 2.2, z + (rnd() - 0.5) * 2); c.castShadow = true; scene.add(c); } }
+  for (const [x, z, h] of [[5.4, -3.6, 10], [7.2, -1.0, 11], [6.6, 1.9, 9], [-6.2, -6.5, 10], [4.2, -8, 12]]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, h, 8), barkM); t.position.set(x, h / 2, z); t.castShadow = true; scene.add(t); for (let k = 0; k < 4; k++) { const c = new THREE.Mesh(new THREE.IcosahedronGeometry(1.0 + rnd() * 0.7, 1), M.birchLeaf); c.position.set(x + (rnd() - 0.5) * 2, h * 0.75 + rnd() * 2.2, z + (rnd() - 0.5) * 2); c.castShadow = true; scene.add(c); } }
   // grass tufts and flowers in the clearing
   const grassN = 900; const grassI = new THREE.InstancedMesh(new THREE.ConeGeometry(0.05, 0.3, 4), new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap: ramp }), grassN);
   { const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pos = new THREE.Vector3(), cc = new THREE.Color(); const a = new THREE.Color(0x4f8a34), b = new THREE.Color(0x8fc04e); let n = 0;
@@ -279,7 +287,7 @@ export function createWorld(canvas) {
   grassI.receiveShadow = true; scene.add(grassI);
   for (let i = 0; i < 36; i++) { const x = -8 + rnd() * 18, z = -5 + rnd() * 14; if (Math.abs(x) < halfL + 0.3 && z > -halfD - 0.3 && z < halfD + C.PORCH + 0.5) continue; const f = new THREE.Mesh(new THREE.SphereGeometry(0.03, 5, 4), toon([0xd9c060, 0xd8d4c8, 0xb060b0, 0xc04a3a][i % 4])); f.position.set(x, 0.18, z); scene.add(f); }
   // bushes near the walls
-  for (const [x, z, r] of [[-3.6, 3.2, 0.7], [-3.9, 2.2, 0.5], [3.8, 3.0, 0.6], [4.2, -2.6, 0.8], [-3.5, -3.3, 0.6]]) { const b = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), toon(0x3f7a38)); b.position.set(x, r * 0.6, z); b.castShadow = true; scene.add(b); }
+  for (const [x, z, r] of [[-3.6, 3.2, 0.7], [-3.9, 2.2, 0.5], [3.8, 3.0, 0.6], [4.2, -2.6, 0.8], [-3.5, -3.3, 0.6]]) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 1), toon(0x3f7a38)); b.position.set(x, r * 0.6, z); b.castShadow = true; scene.add(b); }
 
   /* ---------- particles ---------- */
   function softDot(size, col) { const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d"); const g = x.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2); g.addColorStop(0, col + "ff"); g.addColorStop(0.4, col + "88"); g.addColorStop(1, col + "00"); x.fillStyle = g; x.fillRect(0, 0, size, size); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
@@ -291,13 +299,32 @@ export function createWorld(canvas) {
   const dustN = 60, dustG = new THREE.BufferGeometry(), dustP = new Float32Array(dustN * 3), dustB = []; for (let i = 0; i < dustN; i++) dustB.push({ x: deskX - 0.9 + rnd() * 1.4, y: inner.y + 0.8 + rnd() * 0.9, z: deskZ - 0.3 + rnd() * 0.9, p: rnd() * 6 });
   dustG.setAttribute("position", new THREE.BufferAttribute(dustP, 3)); const dust = new THREE.Points(dustG, new THREE.PointsMaterial({ size: 0.02, map: softDot(16, "#ffe0b0"), transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending })); cabin.add(dust);
 
+
+  /* ---------- merge static meshes per material: fewer draw calls ---------- */
+  function mergeStatic() {
+    const skip = new Set([door, camRig, boat, fire]); const groups = new Map(); const remove = [];
+    scene.updateMatrixWorld(true);
+    scene.traverse(o => {
+      if (!o.isMesh || o.isInstancedMesh || o.userData.hot || o.name || Array.isArray(o.material)) return;
+      if (!o.geometry.attributes.uv || !o.geometry.attributes.normal) return;
+      let a = o.parent, bad = false; while (a) { if (skip.has(a)) { bad = true; break; } a = a.parent; } if (bad) return;
+      if (o.material.map || o.material.transparent || o.material.isShaderMaterial || o.material.isPointsMaterial) return;
+      let g = o.geometry.clone(); if (g.index) g = g.toNonIndexed(); g.applyMatrix4(o.matrixWorld); for (const k of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(k)) g.deleteAttribute(k);
+      if (!groups.has(o.material)) groups.set(o.material, []); groups.get(o.material).push(g); remove.push(o);
+    });
+    const done = new Set();
+    for (const [mat, gs] of groups) { if (gs.length < 2) continue; const merged = mergeGeometries(gs, false); if (!merged) { console.warn("merge failed", mat.name); continue; } const m = new THREE.Mesh(merged, mat); m.castShadow = m.receiveShadow = true; m.name = "merged"; scene.add(m); done.add(mat); }
+    for (const o of remove) { if (done.has(o.material)) o.parent.remove(o); }
+  }
+  mergeStatic();
+
   /* ---------- lights ---------- */
   const hemi = new THREE.HemisphereLight(0x6f8fd0, 0x243a20, 0.7); scene.add(hemi);
-  const moon = new THREE.DirectionalLight(P.moon, 0.9); moon.position.set(-30, 36, -40); moon.castShadow = true; moon.shadow.mapSize.set(lite ? 1024 : 2048, lite ? 1024 : 2048); Object.assign(moon.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, near: 1, far: 120 }); moon.shadow.bias = -0.0008; scene.add(moon);
-  const winLight = new THREE.PointLight(P.lamp, 7, 10, 2); winLight.position.set(C.WIN_X, F + 1.5, halfD + 0.5); winLight.castShadow = !lite; winLight.shadow.mapSize.set(512, 512); scene.add(winLight);
+  const moon = new THREE.DirectionalLight(P.moon, 0.9); moon.position.set(-30, 36, -40); moon.castShadow = true; moon.shadow.mapSize.set(TIERS[tier].shadow, TIERS[tier].shadow); Object.assign(moon.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, near: 1, far: 120 }); moon.shadow.bias = -0.0008; scene.add(moon);
+  const winLight = new THREE.PointLight(P.lamp, 7, 10, 2); winLight.position.set(C.WIN_X, F + 1.5, halfD + 0.5); winLight.castShadow = TIERS[tier].pointShadows; winLight.shadow.mapSize.set(512, 512); scene.add(winLight);
   const doorLight = new THREE.PointLight(P.lamp, 3.5, 7, 2); doorLight.position.set(C.DOOR_X + 0.6, F + 1.9, halfD + 0.5); scene.add(doorLight);
   const sideLight = new THREE.PointLight(P.lamp, 2.5, 6, 2); sideLight.position.set(halfL + 0.4, F + 1.4, -0.6); scene.add(sideLight);
-  const fireLight = new THREE.PointLight(P.fire, 9, 10, 2); fireLight.position.set(fire.position.x, 0.7, fire.position.z); fireLight.castShadow = !lite; fireLight.shadow.mapSize.set(512, 512); scene.add(fireLight);
+  const fireLight = new THREE.PointLight(P.fire, 9, 10, 2); fireLight.position.set(fire.position.x, 0.7, fire.position.z); fireLight.castShadow = TIERS[tier].pointShadows; fireLight.shadow.mapSize.set(512, 512); scene.add(fireLight);
 
   /* ---------- post ---------- */
   const composer = new EffectComposer(renderer);
@@ -365,10 +392,26 @@ export function createWorld(canvas) {
 
   /* ---------- frame ---------- */
   let W = 1, H = 1;
-  function resize(w, h) { W = w; H = h; renderer.setSize(w, h, false); composer.setSize(w * renderer.getPixelRatio(), h * renderer.getPixelRatio()); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  function resize(w, h) { W = w; H = h; const pr = renderer.getPixelRatio(); renderer.setSize(w, h, false); composer.setSize(w * pr, h * pr); bloom.setSize(w * pr * TIERS[tier].bloom, h * pr * TIERS[tier].bloom); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  function applyTier(name) {
+    if (!TIERS[name]) return; tier = name; const T = TIERS[name];
+    renderer.setPixelRatio(Math.min(T.pr, devicePixelRatio)); renderer.shadowMap.type = T.soft ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    for (const l of [moon, winLight, fireLight]) { if (l.shadow.map) { l.shadow.map.dispose(); l.shadow.map = null; } }
+    moon.shadow.mapSize.set(T.shadow, T.shadow); winLight.castShadow = fireLight.castShadow = T.pointShadows; renderer.shadowMap.needsUpdate = true;
+    scene.traverse(o => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.needsUpdate = true); });
+    resize(W, H); try { localStorage.setItem("kvalitet", name); } catch (_) { }
+  }
+  /* automatic: start medium, measure, step down under 40 fps, step up over 58 */
+  let autoTier = true, acc = 0, n = 0, settled = 0; try { autoTier = !localStorage.getItem("kvalitet"); } catch (_) { }
+  function autoAdjust(dt) {
+    if (!autoTier || settled > 1) return; acc += dt; n++; if (acc < 3) return; const fps = n / acc; acc = 0; n = 0;
+    if (fps < 40 && tier !== "low") { applyTier(tier === "high" ? "medium" : "low"); try { localStorage.removeItem("kvalitet"); } catch (_) { } }
+    else if (fps > 58 && tier !== "high") { applyTier(tier === "low" ? "medium" : "high"); try { localStorage.removeItem("kvalitet"); } catch (_) { } }
+    else settled++;
+  }
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   function frame(dt) {
-    state.t += dt; const t = state.t;
+    renderer.info.reset(); state.t += dt; const t = state.t; autoAdjust(dt);
     sky.material.uniforms.t.value = t; waterMat.uniforms.t.value = t; waterMat.uniforms.cam.value.copy(camera.position); grade.uniforms.t.value = t % 10; grade.uniforms.night.value = state.night;
     fireLight.intensity = 8 + Math.sin(t * 11) * 1.4 + Math.sin(t * 23) * 1.0 + Math.sin(t * 5.3) * 0.8;
     stoveLight.intensity = 1.6 + Math.sin(t * 9) * 0.4; lampLight.intensity = 3.0 + Math.sin(t * 40) * 0.03;
@@ -383,5 +426,5 @@ export function createWorld(canvas) {
     if (!state.busy) { if (state.where === "ext") controls.update(); else if (lookBase) { const l = lookBase.clone(); l.x += state.mouse[0] * 1.2; l.y += -state.mouse[1] * 0.6; state.look.lerp(l, 0.08); camera.lookAt(state.look); } }
     composer.render();
   }
-  return { info: renderer.info, scene, camera, renderer, controls, hotspots, state, tour, pick, project, frame, resize, snapshot, door, VIEW, C, trailCam, grade };
+  return { info: renderer.info, applyTier, getTier: () => tier, setAuto: v => { autoTier = v; settled = 0; }, scene, camera, renderer, controls, hotspots, state, tour, pick, project, frame, resize, snapshot, door, VIEW, C, trailCam, grade };
 }

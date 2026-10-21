@@ -62,6 +62,10 @@ function boot() {
     hint.textContent = HINT_OUT; plaque.classList.remove("away", "inside");
     document.getElementById("exitBtn").hidden = true; document.getElementById("camBtn").hidden = true;
   }
+  const qBtn = document.getElementById("qBtn"); const QN = { low: "lav", medium: "middels", high: "høy" };
+  function showQ() { qBtn.textContent = "Kvalitet: " + QN[world.getTier()]; }
+  qBtn.addEventListener("click", () => { const order = ["low", "medium", "high"]; world.setAuto(false); world.applyTier(order[(order.indexOf(world.getTier()) + 1) % 3]); showQ(); });
+  setInterval(showQ, 1000); showQ();
   document.getElementById("exitBtn").addEventListener("click", exit);
   addEventListener("keydown", e => { if (e.key === "Escape" && !panel.open && state.where === "int") exit(); });
   window.__tour = { enter, exit, world };
